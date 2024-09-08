@@ -23,7 +23,7 @@ def create_bb(bb):
     b1,b2=bb
     return f"{b1}_{b2}"
 
-def _build_var_name(variable, model = None, scenario = None, quality = None,rawtime=None,l=None,u=None):
+def _build_var_name(variable, model = None, scenario = None, quality = None,rawtime=None,l=None,u=None,use_stac=False):
     var_name = f'v:{variable}'
     if model:
         var_name = var_name + f',m:{model}'
@@ -39,6 +39,9 @@ def _build_var_name(variable, model = None, scenario = None, quality = None,rawt
     if u:
         ubb=create_bb(u)
         var_name = var_name + f',u:{ubb}'
+    if use_stac:
+        var_name = var_name + f',z:T'
+        
 
     return var_name
 
@@ -74,12 +77,12 @@ class DXInterface:
         end_formatted = self.format_date(end_date)
         return f"{start_formatted}_{end_formatted}"
 
-    def _query_pc(self, variable, start_date, end_date, model = None, scenario = None, quality = None, lb=None, ub=None,geo_lb = (-60.0,-180.0), geo_ub = (90.0,180.0)):
+    def _query_pc(self, variable, start_date, end_date, model = None, scenario = None, quality = None, lb=None,use_stac=False, ub=None,geo_lb = (-60.0,-180.0), geo_ub = (90.0,180.0)):
         glb = _discretize_geo(*geo_lb)
         gub = _discretize_geo(*geo_ub)
         assert glb[0] <= gub[0] and glb[1] <= gub[1]
         rawtime= self.convert_dates(start_date, end_date)
-        var_name = _build_var_name(variable, model, scenario, quality,rawtime,lb,ub)
+        var_name = _build_var_name(variable, model, scenario, quality,rawtime,lb,ub,use_stac)
         print(var_name)
         version = _get_version(start_date, end_date)
         data = self.api.GetNDArray(var_name, version, glb, gub, nspace = 'cmip6-planetary')
